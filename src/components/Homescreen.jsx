@@ -8,24 +8,41 @@ const difficulties = [
   { id: 'hard', label: '🔥 Hard', desc: '8 questions', count: 8, color: '#EF4444' },
 ];
 
-export default function HomeScreen({ onStart, highScore }) {
+const AVATARS = ['🧙', '🧝', '🦸', '🧚', '🐲', '🦄', '🐉', '🧸', '🦋', '🌟'];
+
+export default function HomeScreen({ onStart, highScore, profile, onSaveProfile, onShowHistory }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState(null);
-  const [playerName, setPlayerName] = useState('');
-  const [step, setStep] = useState(1);
+  const [playerName, setPlayerName] = useState(profile?.name || '');
+  const [selectedAvatar, setSelectedAvatar] = useState(profile?.avatar || '🧙');
+  const [step, setStep] = useState(profile ? 2 : 1);
 
   const handleNext = () => {
-    if (step === 1 && playerName.trim()) setStep(2);
+    if (step === 1 && playerName.trim()) {
+      onSaveProfile({ name: playerName.trim(), avatar: selectedAvatar });
+      setStep(2);
+    }
     else if (step === 2 && selectedCategory) setStep(3);
     else if (step === 3 && selectedDifficulty) {
       const diff = difficulties.find(d => d.id === selectedDifficulty);
-      onStart({ category: selectedCategory, difficulty: selectedDifficulty, count: diff.count, name: playerName.trim() });
+      onStart({
+        category: selectedCategory,
+        difficulty: selectedDifficulty,
+        count: diff.count,
+        name: playerName.trim(),
+        avatar: selectedAvatar,
+      });
     }
+  };
+
+  const handleChangeProfile = () => {
+    setStep(1);
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">
 
+      {/* Header */}
       <motion.div
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -40,25 +57,57 @@ export default function HomeScreen({ onStart, highScore }) {
           🧙
         </motion.div>
         <h1
-          className="text-5xl md:text-6xl font-magic shimmer-text mb-2"
+          className="text-5xl md:text-6xl shimmer-text mb-2"
           style={{ fontFamily: "'Fredoka One', cursive" }}
         >
           Magic Quiz!
         </h1>
-        <p className="text-purple-300 text-lg font-body font-semibold">
+        <p className="text-purple-300 text-lg font-semibold">
           ✨ Spell your way to being SUPER SMART! ✨
         </p>
-        {highScore > 0 && (
+
+        {/* Profile badge + history button */}
+        {profile && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="mt-3 inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/40 rounded-full px-4 py-1"
+            className="mt-4 flex items-center justify-center gap-3 flex-wrap"
           >
-            <span className="text-yellow-400 text-sm font-bold">🏆 Best Score: {highScore} pts</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{ background: 'rgba(124,58,237,0.2)', border: '1.5px solid rgba(124,58,237,0.4)' }}
+            >
+              <span className="text-xl">{profile.avatar}</span>
+              <span className="text-white font-bold text-sm">{profile.name}</span>
+              <button
+                onClick={handleChangeProfile}
+                className="text-purple-400 text-xs underline ml-1"
+              >
+                change
+              </button>
+            </div>
+
+            {highScore > 0 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{ background: 'rgba(245,158,11,0.15)', border: '1.5px solid rgba(245,158,11,0.35)' }}
+              >
+                <span className="text-yellow-400 text-sm font-bold">🏆 Best: {highScore} pts</span>
+              </div>
+            )}
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onShowHistory}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm"
+              style={{ background: 'rgba(6,182,212,0.15)', border: '1.5px solid rgba(6,182,212,0.35)', color: '#06B6D4' }}
+            >
+              📜 History
+            </motion.button>
           </motion.div>
         )}
       </motion.div>
 
+      {/* Main card */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -93,7 +142,7 @@ export default function HomeScreen({ onStart, highScore }) {
 
         <AnimatePresence mode="wait">
 
-          {/* Step 1 — Name */}
+          {/* Step 1 — Profile */}
           {step === 1 && (
             <motion.div
               key="step1"
@@ -102,10 +151,31 @@ export default function HomeScreen({ onStart, highScore }) {
               exit={{ x: -60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             >
-              <h2 className="text-2xl font-magic text-white text-center mb-2" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              <h2 className="text-2xl text-white text-center mb-2" style={{ fontFamily: "'Fredoka One', cursive" }}>
                 Who's the Wizard? 🧙
               </h2>
-              <p className="text-purple-300 text-center text-sm mb-6">Enter your magical name!</p>
+              <p className="text-purple-300 text-center text-sm mb-4">Pick your avatar and enter your name!</p>
+
+              {/* Avatar picker */}
+              <div className="flex flex-wrap justify-center gap-3 mb-4">
+                {AVATARS.map(av => (
+                  <motion.button
+                    key={av}
+                    whileHover={{ scale: 1.3 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setSelectedAvatar(av)}
+                    className="text-2xl w-12 h-12 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: selectedAvatar === av ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.05)',
+                      border: `2px solid ${selectedAvatar === av ? '#7C3AED' : 'rgba(255,255,255,0.1)'}`,
+                      boxShadow: selectedAvatar === av ? '0 0 15px rgba(124,58,237,0.5)' : 'none',
+                    }}
+                  >
+                    {av}
+                  </motion.button>
+                ))}
+              </div>
+
               <input
                 type="text"
                 value={playerName}
@@ -121,19 +191,6 @@ export default function HomeScreen({ onStart, highScore }) {
                 }}
                 autoFocus
               />
-              <div className="flex justify-center gap-3 mb-6">
-                {['🧙', '🧝', '🦸', '🧚', '🐲'].map(emoji => (
-                  <motion.button
-                    key={emoji}
-                    whileHover={{ scale: 1.3, rotate: 10 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="text-2xl"
-                    onClick={() => setPlayerName(prev => prev + emoji)}
-                  >
-                    {emoji}
-                  </motion.button>
-                ))}
-              </div>
             </motion.div>
           )}
 
@@ -146,7 +203,7 @@ export default function HomeScreen({ onStart, highScore }) {
               exit={{ x: -60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             >
-              <h2 className="text-2xl font-magic text-white text-center mb-1" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              <h2 className="text-2xl text-white text-center mb-1" style={{ fontFamily: "'Fredoka One', cursive" }}>
                 Pick Your Spell! 🪄
               </h2>
               <p className="text-purple-300 text-center text-sm mb-5">What do you want to master today?</p>
@@ -172,13 +229,7 @@ export default function HomeScreen({ onStart, highScore }) {
                       {cat.label}
                     </span>
                     {selectedCategory === cat.id && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="ml-auto text-xl"
-                      >
-                        ✅
-                      </motion.span>
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="ml-auto text-xl">✅</motion.span>
                     )}
                   </motion.button>
                 ))}
@@ -195,7 +246,7 @@ export default function HomeScreen({ onStart, highScore }) {
               exit={{ x: -60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             >
-              <h2 className="text-2xl font-magic text-white text-center mb-1" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              <h2 className="text-2xl text-white text-center mb-1" style={{ fontFamily: "'Fredoka One', cursive" }}>
                 Choose Your Power! ⚡
               </h2>
               <p className="text-purple-300 text-center text-sm mb-6">How brave are you feeling?</p>
@@ -228,7 +279,7 @@ export default function HomeScreen({ onStart, highScore }) {
 
         </AnimatePresence>
 
-        {/* Navigation buttons */}
+        {/* Navigation */}
         <div className="flex gap-3 mt-6">
           {step > 1 && (
             <motion.button

@@ -4,9 +4,10 @@ import FloatingStars from './components/FloatingStars';
 import HomeScreen from './components/HomeScreen';
 import QuizScreen from './components/QuizScreen';
 import ResultScreen from './components/ResultScreen';
+import HistoryScreen from './components/HistoryScreen';
+import { saveResult, loadProfile, saveProfile, loadHistory } from './utils/storage';
 import './index.css';
 
-// Background magic orbs
 function MagicOrbs() {
   return (
     <>
@@ -21,10 +22,17 @@ export default function App() {
   const [screen, setScreen] = useState('home');
   const [quizConfig, setQuizConfig] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
+  const [profile, setProfile] = useState(() => loadProfile());
+  const [history, setHistory] = useState(() => loadHistory());
   const [highScore, setHighScore] = useState(() => {
     try { return parseInt(localStorage.getItem('magic-quiz-hs') || '0'); }
     catch { return 0; }
   });
+
+  const handleSaveProfile = (newProfile) => {
+    saveProfile(newProfile);
+    setProfile(newProfile);
+  };
 
   const handleStart = (config) => {
     setQuizConfig(config);
@@ -32,8 +40,16 @@ export default function App() {
   };
 
   const handleFinish = (result) => {
+    // Save to history
+    saveResult({
+      ...result,
+      category: quizConfig.category,
+      difficulty: quizConfig.difficulty,
+    });
+    setHistory(loadHistory());
     setQuizResult(result);
     setScreen('result');
+
     if (result.score > highScore) {
       setHighScore(result.score);
       try { localStorage.setItem('magic-quiz-hs', result.score); } catch {}
@@ -59,7 +75,13 @@ export default function App() {
       <AnimatePresence mode="wait">
         {screen === 'home' && (
           <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <HomeScreen onStart={handleStart} highScore={highScore} />
+            <HomeScreen
+              onStart={handleStart}
+              highScore={highScore}
+              profile={profile}
+              onSaveProfile={handleSaveProfile}
+              onShowHistory={() => setScreen('history')}
+            />
           </motion.div>
         )}
 
@@ -71,7 +93,25 @@ export default function App() {
 
         {screen === 'result' && quizResult && (
           <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <ResultScreen result={quizResult} onPlayAgain={handlePlayAgain} onHome={handleHome} />
+            <ResultScreen
+              result={quizResult}
+              onPlayAgain={handlePlayAgain}
+              onHome={handleHome}
+              onShowHistory={() => setScreen('history')}
+            />
+          </motion.div>
+        )}
+
+        {screen === 'history' && (
+          <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <HistoryScreen
+              history={history}
+              onBack={handleHome}
+              onClear={() => {
+                clearHistory();
+                setHistory([]);
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
