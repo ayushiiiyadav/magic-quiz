@@ -42,8 +42,7 @@ export function saveResult(result) {
         fun: a.question.fun,
       })),
     };
-    history.unshift(entry); // newest first
-    // Keep only last 20 entries
+    history.unshift(entry); 
     const trimmed = history.slice(0, 20);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
   } catch {}
