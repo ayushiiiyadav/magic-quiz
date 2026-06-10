@@ -123,7 +123,7 @@ Then open your browser at `http://localhost:5173`
 
 ## 👨‍💻 Built by
 
-**Ayushi Yadav** — built from scratch using tools and AI
+**Ayushi Yadav** —Built from scratch, leveraging modern development tools and AI to deliver an efficient and innovative solution.
 
 ---
 
