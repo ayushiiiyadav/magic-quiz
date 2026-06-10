@@ -123,7 +123,7 @@ Then open your browser at `http://localhost:5173`
 
 ## 👨‍💻 Built by
 
-**Witish Kumar Yadav** — built from scratch with guidance from Claude AI 🤖
+**Ayushi Yadav** — built from scratch with guidance from Claude AI 🤖
 
 ---
 
